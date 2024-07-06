@@ -2,6 +2,43 @@ import mongoose,{Schema} from "mongoose"
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 
+
+const packSizeSchema = new mongoose.Schema({
+    weight: {
+        value: {
+            type: Number,
+            required: [true, "Please enter the weight of the product"]
+        },
+        unit: {
+            type: String,
+            enum: ['g', 'ml', 'kg', 'L'],
+            required: [true, "Please enter the unit of the weight"]
+        }
+    },
+    price: {
+        type: Number,
+        required: [true, "Please enter the product price"]
+    },
+    cuttedPrice: {
+        type: Number,
+    },
+    packType: {
+        type: String,
+        enum: ['pouch', 'multipack'],
+        required: [true, "Please enter the pack type"]
+    },
+    pouchCount: {
+        type: Number,
+        required: function() { return this.packType === 'multipack'; },
+        validate: {
+            validator: function(v) {
+                return this.packType !== 'multipack' || (v && v > 0);
+            },
+            message: 'Pouch count is required for multipack and should be greater than 0'
+        }
+    }
+});
+
 const productSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -30,14 +67,9 @@ const productSchema = new mongoose.Schema({
             }
         }
     ],
-    price: {
-        type: Number,
-        required: [true, "Please enter product price"]
-    },
-    cuttedPrice: {
-        type: Number,
-        required: [true, "Please enter cutted price"]
-    },
+    packSize: [
+      packSizeSchema
+    ],
     images: [
         {
             public_id: {
@@ -121,4 +153,7 @@ const productSchema = new mongoose.Schema({
     }
 });
 
-module.exports = mongoose.model('Product', productSchema);
+
+const Product = mongoose.model('Product', productSchema);
+
+export default Product;
